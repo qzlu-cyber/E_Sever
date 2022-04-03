@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:36:02
- * @LastEditTime: 2022-04-03 00:06:38
+ * @LastEditTime: 2022-04-03 18:03:07
  * @Description: 用户相关路由文件
  */
 const _ = require("lodash");
@@ -17,14 +17,21 @@ const auth = require("../middlewares/auth");
 const { User, validate } = require("../models/users");
 
 router.get("/:id", async (req, res) => {
-  const user = await Users.findById(req.params.id);
+  const user = await User.findById(req.params.id);
   if (!user) return res.status(404).send("抱歉，你要找的用户不存在");
 
   res.send(user);
 });
 
+//TODO: 查询自己已购买的课程
 router.get("/me", auth, async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
+  res.send(user);
+});
+
+//TODO: 购买课程
+router.post("/shopping", auth, async (req, res) => {
+  const user = await User.findById(req.user._id);
   res.send(user);
 });
 

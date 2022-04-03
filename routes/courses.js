@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-02 23:49:06
+ * @LastEditTime: 2022-04-03 18:54:01
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
@@ -13,9 +13,14 @@ const { Course, validate } = require("../models/courses");
 //展示单个课程（用于显示某一课程详情）
 router.get("/:id", async (req, res) => {
   const course = await Course.findById(req.params.id);
-  if (!course) return res.status(404).send("抱歉，你要找的用户不存在");
+  if (!course) return res.status(404).send("抱歉，你要找的课程不存在");
 
-  res.send(course);
+  const result = await Course.findById(req.params.id).populate(
+    "teacher",
+    "name -_id"
+  ); // 附带老师信息将课程所有信息打印出来
+
+  res.send(result);
 });
 
 //查询操作符
@@ -28,9 +33,9 @@ router.get("/", async (req, res) => {
   res.send(courses);
 });
 
-//查询特定类别课程，用于分类
-router.get("/searchByTag", async (req, res) => {
-  const courses = await Course.find({ tags: { $in: req.body.tag } });
+//TODO: 查询特定类别课程，用于分类
+router.post("/searchByTag", async (req, res) => {
+  const courses = await Course.find({ tags: req.body.tag });
 
   res.send(courses);
 });
@@ -63,7 +68,7 @@ router.post("/", async (req, res) => {
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const courseName = await Users.findOne({
+  const courseName = await Course.findOne({
     name: req.body.name,
   });
   if (courseName) return res.status(400).send("与其他课程重名了，更换一个吧！");
@@ -74,10 +79,12 @@ router.post("/", async (req, res) => {
       description: req.body.description,
       courseDetail: req.body.courseDetail,
       tags: req.body.tags,
+      price: req.body.price,
+      teacher: req.body.teacher,
     });
 
     course = await course.save();
-    res.send(_.pick(user, ["_id", "name"]));
+    res.send(_.pick(course, ["_id", "name"]));
   } else {
     res.send({
       code: -1,

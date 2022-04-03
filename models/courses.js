@@ -1,11 +1,13 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:07:50
- * @LastEditTime: 2022-04-02 23:35:22
+ * @LastEditTime: 2022-04-03 18:55:46
  * @Description: 课程相关路由文件
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
+
+const { User } = require("./users");
 
 const courseSchema = new mongoose.Schema({
   name: {
@@ -27,20 +29,26 @@ const courseSchema = new mongoose.Schema({
     type: Array,
   },
   tags: {
-    type: [String],
+    type: String,
     required: true,
   },
   saleNum: {
     type: Number,
     default: 0,
   },
-  teacherID: {
-    type: String,
-  },
   date: {
     type: Date,
-    require: true,
     default: Date.now,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  //链接文档
+  teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Users",
+    required: true,
   },
 });
 
@@ -51,12 +59,14 @@ function coursesValidate(reqBody) {
     name: Joi.string().min(3).max(7).required(),
     description: Joi.string().required(),
     courseDetail: Joi.array().required(),
-    tags: Joi.array().required(),
+    tags: Joi.string().required(),
     comments: Joi.array(),
+    price: Joi.number().min(0).required(),
+    teacher: Joi.string(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }
 
-exports.coursesSchema = courseSchema;
+exports.courseSchema = courseSchema;
 exports.Course = Course;
 exports.validate = coursesValidate;

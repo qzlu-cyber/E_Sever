@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:28:28
- * @LastEditTime: 2022-04-02 13:48:44
+ * @LastEditTime: 2022-04-03 18:37:36
  * @Description: 入口文件
  */
 const express = require("express");
@@ -12,6 +12,7 @@ const http = require("http").createServer(app);
 const bodyParser = require("body-parser");
 
 const users = require("./routes/users");
+const courses = require("./routes/courses");
 
 app.use(
   express.urlencoded({
@@ -41,6 +42,7 @@ mongoose
   .catch((error) => console.error(error));
 
 app.use("/api/users", users);
+app.use("/api/courses", courses);
 
 const port = process.env.PORT || 3000;
 

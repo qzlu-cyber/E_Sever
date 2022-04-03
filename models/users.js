@@ -1,11 +1,13 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-03 00:05:59
+ * @LastEditTime: 2022-04-03 18:56:02
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
+
+const { courseSchema } = require("./courses");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -40,6 +42,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  //用户已购买的课程, 聚合文档
+  courses: {
+    type: [courseSchema],
+  },
 });
 
 const User = mongoose.model("Users", userSchema);
@@ -55,6 +61,6 @@ function userValidate(reqBody) {
   return ({ error, value } = schema.validate(reqBody));
 }
 
-exports.usersSchema = userSchema;
+exports.userSchema = userSchema;
 exports.User = User;
 exports.validate = userValidate;
