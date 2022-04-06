@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-06 14:43:05
+ * @LastEditTime: 2022-04-06 19:20:55
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
@@ -10,19 +10,6 @@ const router = express.Router();
 
 const auth = require("../middlewares/auth");
 const { Course, validate } = require("../models/courses");
-
-//展示单个课程（用于显示某一课程详情）
-router.get("/:id", async (req, res) => {
-  const course = await Course.findById(req.params.id);
-  if (!course) return res.status(404).send("抱歉，你要找的课程不存在");
-
-  const result = await Course.findById(req.params.id).populate(
-    "teacher",
-    "name -_id"
-  ); // 附带老师信息将课程所有信息打印出来
-
-  res.send(result);
-});
 
 //查询操作符
 // eq(=) ne(!=) gt(>) gte(>=) lt(<) lte(<=) in nin
@@ -43,14 +30,14 @@ router.post("/searchByTag", async (req, res) => {
 
 //根据购买人数查询热门课程
 router.get("/searchByHot", async (req, res) => {
-  const courses = await Course.find().limit(10).sort({ saleNUm: -1 });
+  const courses = await Course.find().sort({ saleNum: -1 }).limit(5);
 
   res.send(courses);
 });
 
 //根据课程发布时间查询课程
 router.get("/searchByDate", async (req, res) => {
-  const courses = await Course.find().limit(10).sort({ date: 1 });
+  const courses = await Course.find().limit(5).sort({ date: -1 });
 
   res.send(courses);
 });
@@ -64,8 +51,22 @@ router.get("/searchByTeacher", async (req, res) => {
   res.send(courses);
 });
 
+//展示单个课程（用于显示某一课程详情）
+router.get("/:id", async (req, res) => {
+  const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).send("抱歉，你要找的课程不存在");
+
+  const result = await Course.findById(req.params.id).populate(
+    "teacher",
+    "name -_id"
+  ); // 附带老师信息将课程所有信息打印出来
+
+  res.send(result);
+});
+
 //发布课程
 router.post("/", auth, async (req, res) => {
+  console.log(req.user);
   //如果有权限检查body体是否合法
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -83,10 +84,12 @@ router.post("/", auth, async (req, res) => {
       tags: req.body.tags,
       price: req.body.price,
       teacher: req.user._id,
+      teacherName: req.user.name,
+      cover: req.body.cover,
     });
 
     course = await course.save();
-    res.send(_.pick(course, ["_id", "name"]));
+    res.send(course);
   } else {
     res.send({
       code: -1,

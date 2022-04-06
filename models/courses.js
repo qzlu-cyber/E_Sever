@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:07:50
- * @LastEditTime: 2022-04-06 11:28:32
+ * @LastEditTime: 2022-04-06 18:20:34
  * @Description: 课程相关路由文件
  */
 const mongoose = require("mongoose");
@@ -18,6 +18,10 @@ const courseSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+  },
+  cover: {
+    type: String,
+    require: true,
   },
   courseDetail: {
     type: Array,
@@ -48,6 +52,15 @@ const courseSchema = new mongoose.Schema({
     ref: "Users",
     required: true,
   },
+  teacherName: {
+    type: String,
+    required: true,
+  },
+  //评分
+  stars: {
+    type: Number,
+    default: 5,
+  },
 });
 
 const Course = mongoose.model("Course", courseSchema);
@@ -61,6 +74,9 @@ function coursesValidate(reqBody) {
     comments: Joi.array(),
     price: Joi.number().min(0).required(),
     teacher: Joi.string(),
+    cover: Joi.string(),
+    teacherName: Joi.string(),
+    starts: Joi.number(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }
