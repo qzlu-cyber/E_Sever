@@ -1,11 +1,13 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-03 18:56:02
+ * @LastEditTime: 2022-04-06 11:29:41
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
+const jwt = require("jsonwebtoken");
+const config = require("config");
 
 const { courseSchema } = require("./courses");
 
@@ -44,9 +46,24 @@ const userSchema = new mongoose.Schema({
   },
   //用户已购买的课程, 聚合文档
   courses: {
-    type: [courseSchema],
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Courses",
+    default: [],
   },
 });
+
+userSchema.methods.generateAuthToken = function () {
+  const token = jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      name: this.name,
+      userView: this.userView,
+    },
+    config.get("jwtToken")
+  );
+  return token;
+};
 
 const User = mongoose.model("Users", userSchema);
 
@@ -57,6 +74,8 @@ function userValidate(reqBody) {
     password: Joi.string().min(1).max(20).required(),
     avatar: Joi.string(),
     signature: Joi.string().max(15),
+    userView: Joi.number(),
+    courses: Joi.array(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }

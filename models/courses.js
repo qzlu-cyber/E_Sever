@@ -1,19 +1,17 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:07:50
- * @LastEditTime: 2022-04-03 18:55:46
+ * @LastEditTime: 2022-04-06 11:28:32
  * @Description: 课程相关路由文件
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
 
-const { User } = require("./users");
-
 const courseSchema = new mongoose.Schema({
   name: {
     type: String,
     minlength: 3,
-    maxlength: 7,
+    maxlength: 70,
     unique: true,
     required: true,
   },
@@ -56,7 +54,7 @@ const Course = mongoose.model("Course", courseSchema);
 
 function coursesValidate(reqBody) {
   const schema = Joi.object({
-    name: Joi.string().min(3).max(7).required(),
+    name: Joi.string().min(3).max(70).required(),
     description: Joi.string().required(),
     courseDetail: Joi.array().required(),
     tags: Joi.string().required(),

@@ -1,13 +1,14 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-03 18:54:01
+ * @LastEditTime: 2022-04-06 14:43:05
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
 const express = require("express");
 const router = express.Router();
 
+const auth = require("../middlewares/auth");
 const { Course, validate } = require("../models/courses");
 
 //展示单个课程（用于显示某一课程详情）
@@ -64,7 +65,8 @@ router.get("/searchByTeacher", async (req, res) => {
 });
 
 //发布课程
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
+  //如果有权限检查body体是否合法
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -80,7 +82,7 @@ router.post("/", async (req, res) => {
       courseDetail: req.body.courseDetail,
       tags: req.body.tags,
       price: req.body.price,
-      teacher: req.body.teacher,
+      teacher: req.user._id,
     });
 
     course = await course.save();
@@ -94,20 +96,20 @@ router.post("/", async (req, res) => {
 });
 
 //增加课程新章节
-router.put("/editInfo/:id", async (req, res) => {
+router.put("/editInfo/:id", auth, async (req, res) => {
   const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).send("您要更改的课程不存在！");
 
-  if (!(course.teacherID === req.teacherID))
+  console.log(course.teacher == req.user._id);
+  if (!(course.teacher == req.user._id)) {
     return res.status(400).send("无更改权限！！！");
-  else {
-    const course = await Course.findByIdAndUpdate(
-      req.params.id,
-      {
-        courseDetail: courseDetail.push(req.body.courseDetail),
-      },
-      { new: true }
-    );
-    res.send(course);
+  } else {
+    console.log(req.body);
+    course.set({
+      courseDetail: course.courseDetail.concat(req.body.courseDetail),
+    });
+    const result = await course.save();
+    res.send(result);
   }
 });
 

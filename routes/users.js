@@ -1,13 +1,11 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:36:02
- * @LastEditTime: 2022-04-03 18:03:07
+ * @LastEditTime: 2022-04-06 11:49:49
  * @Description: 用户相关路由文件
  */
 const _ = require("lodash");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const config = require("config");
 const multiparty = require("multiparty");
 const fs = require("fs");
 const express = require("express");
@@ -15,23 +13,37 @@ const router = express.Router();
 
 const auth = require("../middlewares/auth");
 const { User, validate } = require("../models/users");
+const { Course } = require("../models/courses");
 
-router.get("/:id", async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) return res.status(404).send("抱歉，你要找的用户不存在");
-
-  res.send(user);
-});
-
-//TODO: 查询自己已购买的课程
+//查询自己的信息
 router.get("/me", auth, async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
   res.send(user);
 });
 
-//TODO: 购买课程
+//购买课程
 router.post("/shopping", auth, async (req, res) => {
   const user = await User.findById(req.user._id);
+  const course = await Course.findById(req.body.courseId);
+  if (!course) return res.status(404).send("抱歉，你要购买的课程不存在");
+
+  for (let i = 0; i < user.courses.length; i++) {
+    if (user.courses[i] == req.body.courseId[0])
+      return res.status(400).send("您已经购买过该课程，不能重复购买！");
+  }
+  user.set({
+    courses: user.courses.concat(req.body.courseId),
+  });
+  const result = await user.save();
+  res.send(result);
+});
+
+router.post("/searchByName", async (req, res) => {
+  const user = await User.findOne({
+    name: req.body.name,
+  }).select("-password");
+  if (!user) return res.status(404).send("抱歉，你要找的用户不存在");
+
   res.send(user);
 });
 
@@ -69,6 +81,7 @@ router.post("/android", function (req, res) {
   avatar = "http://192.168.31.52:3000/uploads/avatars/image" + date + ".png";
 });
 
+//注册
 router.post("/", async (req, res) => {
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -76,11 +89,12 @@ router.post("/", async (req, res) => {
   const userEmail = await User.findOne({
     email: req.body.email,
   });
+  if (userEmail) return res.status(400).send("邮箱已被注册");
+
   const userName = await User.findOne({
     name: req.body.name,
   });
   if (userName) return res.status(400).send("用户名已被注册");
-  if (userEmail) return res.status(400).send("邮箱已被注册");
 
   if (!userEmail && !userName) {
     let user = new User({
@@ -94,15 +108,7 @@ router.post("/", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
 
-    const token = jwt.sign(
-      {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin,
-      },
-      config.get("jwtToken")
-    );
+    const token = user.generateAuthToken();
     user = await user.save();
     res
       .header("x-auth-token", token)
@@ -110,13 +116,14 @@ router.post("/", async (req, res) => {
   } else {
     res.send({
       code: -1,
-      msg: "验证码错误",
+      msg: "发生错误",
     });
   }
 });
 
-router.put("/editInfo/:id", async (req, res) => {
-  const user = await User.findById(req.params.id);
+//编辑个人信息
+router.put("/editInfo", auth, async (req, res) => {
+  const user = await User.findById(req.user._id);
   const validPassword = await bcrypt.compare(
     req.body.prePassword,
     user.password
@@ -124,7 +131,7 @@ router.put("/editInfo/:id", async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   if (validPassword) {
     const user = await User.findByIdAndUpdate(
-      req.params.id,
+      req.user._id,
       {
         password: await bcrypt.hash(req.body.password, salt),
       },
@@ -132,7 +139,7 @@ router.put("/editInfo/:id", async (req, res) => {
         new: true,
       }
     );
-    res.send(user);
+    res.send("修改成功");
   } else {
     return res.status(400).send("修改失败");
   }
