@@ -1,12 +1,13 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-06 19:20:55
+ * @LastEditTime: 2022-04-08 19:11:33
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
 const express = require("express");
 const router = express.Router();
+const fs = require("fs");
 
 const auth = require("../middlewares/auth");
 const { Course, validate } = require("../models/courses");
@@ -21,9 +22,10 @@ router.get("/", async (req, res) => {
   res.send(courses);
 });
 
-//TODO: 查询特定类别课程，用于分类
+//模糊查询特定类别课程，用于分类
 router.post("/searchByTag", async (req, res) => {
-  const courses = await Course.find({ tags: req.body.tag });
+  const reg = new RegExp(req.body.tag, "i");
+  const courses = await Course.find({ name: { $regex: reg } });
 
   res.send(courses);
 });
@@ -65,7 +67,7 @@ router.get("/:id", async (req, res) => {
 });
 
 //发布课程
-router.post("/", auth, async (req, res) => {
+router.post("/", async (req, res) => {
   console.log(req.user);
   //如果有权限检查body体是否合法
   validate(req.body);
@@ -83,8 +85,8 @@ router.post("/", auth, async (req, res) => {
       courseDetail: req.body.courseDetail,
       tags: req.body.tags,
       price: req.body.price,
-      teacher: req.user._id,
-      teacherName: req.user.name,
+      teacher: req.body.teacher,
+      teacherName: req.body.teacherName,
       cover: req.body.cover,
     });
 
@@ -114,6 +116,18 @@ router.put("/editInfo/:id", auth, async (req, res) => {
     const result = await course.save();
     res.send(result);
   }
+});
+
+let imageArr = [];
+router.patch("/", (req, res) => {
+  let result = req.pipe(
+    fs.createWriteStream("./public/uploads/courses/video" + Date.now() + ".mov")
+  );
+  imageArr.push(
+    "http://192.168.31.52:3000/" + result.path.split("./public/").join("")
+  );
+  console.log(imageArr);
+  res.end("OK");
 });
 
 module.exports = router;

@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:28:28
- * @LastEditTime: 2022-04-06 15:31:40
+ * @LastEditTime: 2022-04-08 18:35:46
  * @Description: 入口文件
  */
 const express = require("express");
@@ -10,6 +10,7 @@ const config = require("config");
 const app = express();
 const http = require("http").createServer(app);
 const bodyParser = require("body-parser");
+const path = require("path");
 
 const users = require("./routes/users");
 const courses = require("./routes/courses");
@@ -28,14 +29,6 @@ if (!config.get("jwtToken")) {
   process.exit(1);
 }
 
-app.use(
-  express.json({
-    limit: "5mb",
-  })
-);
-
-app.use(express.static(__dirname + "/public"));
-
 mongoose.set("useCreateIndex", true);
 
 mongoose
@@ -45,6 +38,14 @@ mongoose
   })
   .then(() => console.log("数据库连接成功..."))
   .catch((error) => console.error(error));
+
+app.use(
+  express.json({
+    limit: "5mb",
+  })
+);
+
+app.use(express.static(__dirname + "/public"));
 
 app.use("/api/users", users);
 app.use("/api/courses", courses);

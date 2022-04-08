@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:07:50
- * @LastEditTime: 2022-04-06 18:20:34
+ * @LastEditTime: 2022-04-08 19:10:27
  * @Description: 课程相关路由文件
  */
 const mongoose = require("mongoose");
@@ -21,11 +21,11 @@ const courseSchema = new mongoose.Schema({
   },
   cover: {
     type: String,
-    require: true,
+    // require: true,
   },
   courseDetail: {
     type: Array,
-    required: true,
+    // required: true,
   },
   comments: {
     type: Array,
@@ -69,13 +69,13 @@ function coursesValidate(reqBody) {
   const schema = Joi.object({
     name: Joi.string().min(3).max(70).required(),
     description: Joi.string().required(),
-    courseDetail: Joi.array().required(),
+    courseDetail: Joi.array(),
     tags: Joi.string().required(),
     comments: Joi.array(),
     price: Joi.number().min(0).required(),
-    teacher: Joi.string(),
+    teacher: Joi.string().required(),
     cover: Joi.string(),
-    teacherName: Joi.string(),
+    teacherName: Joi.string().required(),
     starts: Joi.number(),
   });
   return ({ error, value } = schema.validate(reqBody));
