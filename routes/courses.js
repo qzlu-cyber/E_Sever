@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-08 19:11:33
+ * @LastEditTime: 2022-04-09 11:30:39
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
@@ -66,9 +66,23 @@ router.get("/:id", async (req, res) => {
   res.send(result);
 });
 
+// 上传视频
+let courseDetail = [];
+router.patch("/", (req, res) => {
+  console.log(req.body);
+  let result = req.pipe(
+    fs.createWriteStream("./public/uploads/courses/video" + Date.now() + ".mp4")
+  );
+  courseDetail.push(
+    "http://192.168.31.52:3000/" + result.path.split("./public/").join("")
+  );
+  console.log(courseDetail);
+  res.end("OK");
+});
+
 //发布课程
 router.post("/", async (req, res) => {
-  console.log(req.user);
+  // console.log(req.user);
   //如果有权限检查body体是否合法
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -79,6 +93,11 @@ router.post("/", async (req, res) => {
   if (courseName) return res.status(400).send("与其他课程重名了，更换一个吧！");
 
   if (!courseName) {
+    for (let i = 0; i < req.body.courseDetail.length; i++) {
+      req.body.courseDetail[i].uri = courseDetail[i];
+    }
+    courseDetail = [];
+    console.log("req.body.courseDetail", courseDetail);
     let course = new Course({
       name: req.body.name,
       description: req.body.description,
@@ -89,8 +108,8 @@ router.post("/", async (req, res) => {
       teacherName: req.body.teacherName,
       cover: req.body.cover,
     });
-
     course = await course.save();
+    console.log(course);
     res.send(course);
   } else {
     res.send({
@@ -116,18 +135,6 @@ router.put("/editInfo/:id", auth, async (req, res) => {
     const result = await course.save();
     res.send(result);
   }
-});
-
-let imageArr = [];
-router.patch("/", (req, res) => {
-  let result = req.pipe(
-    fs.createWriteStream("./public/uploads/courses/video" + Date.now() + ".mov")
-  );
-  imageArr.push(
-    "http://192.168.31.52:3000/" + result.path.split("./public/").join("")
-  );
-  console.log(imageArr);
-  res.end("OK");
 });
 
 module.exports = router;
