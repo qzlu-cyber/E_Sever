@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-09 11:30:39
+ * @LastEditTime: 2022-04-09 15:32:51
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
@@ -69,7 +69,6 @@ router.get("/:id", async (req, res) => {
 // 上传视频
 let courseDetail = [];
 router.patch("/", (req, res) => {
-  console.log(req.body);
   let result = req.pipe(
     fs.createWriteStream("./public/uploads/courses/video" + Date.now() + ".mp4")
   );
@@ -97,9 +96,10 @@ router.post("/", async (req, res) => {
       req.body.courseDetail[i].uri = courseDetail[i];
     }
     courseDetail = [];
-    console.log("req.body.courseDetail", courseDetail);
+
     let course = new Course({
       name: req.body.name,
+      cover: req.body.cover,
       description: req.body.description,
       courseDetail: req.body.courseDetail,
       tags: req.body.tags,
@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
       cover: req.body.cover,
     });
     course = await course.save();
-    console.log(course);
+    cover = "";
     res.send(course);
   } else {
     res.send({

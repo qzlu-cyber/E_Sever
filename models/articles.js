@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-06 14:32:40
- * @LastEditTime: 2022-04-06 15:41:19
+ * @LastEditTime: 2022-04-09 17:58:03
  * @Description: 动态 model
  */
 const mongoose = require("mongoose");
@@ -21,7 +21,7 @@ const articleSchema = new mongoose.Schema({
     minlength: 6,
     required: true,
   },
-  like: {
+  likes: {
     type: Number,
     default: 0,
   },
@@ -46,6 +46,8 @@ function articleValidate(reqBody) {
   const schema = Joi.object({
     title: Joi.string().min(5).max(20).required(),
     body: Joi.string().min(6).required(),
+    author: Joi.string().required(),
+    likes: Joi.number(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }
