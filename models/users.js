@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-06 11:29:41
+ * @LastEditTime: 2022-04-10 17:34:20
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     minlength: 3,
-    maxlength: 7,
+    maxlength: 10,
     unique: true,
     required: true,
   },
@@ -59,6 +59,8 @@ userSchema.methods.generateAuthToken = function () {
       email: this.email,
       name: this.name,
       userView: this.userView,
+      avatar: this.avatar,
+      signature: this.signature,
     },
     config.get("jwtToken")
   );
@@ -69,13 +71,14 @@ const User = mongoose.model("Users", userSchema);
 
 function userValidate(reqBody) {
   const schema = Joi.object({
-    name: Joi.string().min(3).max(7).required(),
+    name: Joi.string().min(3).max(10).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(1).max(20).required(),
     avatar: Joi.string(),
     signature: Joi.string().max(15),
     userView: Joi.number(),
     courses: Joi.array(),
+    code: Joi.string(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }

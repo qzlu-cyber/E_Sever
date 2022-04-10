@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:36:02
- * @LastEditTime: 2022-04-08 13:56:30
+ * @LastEditTime: 2022-04-10 16:16:01
  * @Description: 用户相关路由文件
  */
 const _ = require("lodash");
@@ -14,6 +14,8 @@ const router = express.Router();
 const auth = require("../middlewares/auth");
 const { User, validate } = require("../models/users");
 const { Course } = require("../models/courses");
+const { Code } = require("../models/code");
+const { createSixNum, nodemail } = require("../services/nodemailer");
 
 //查询自己的信息
 router.get("/me", auth, async (req, res) => {
@@ -92,6 +94,36 @@ router.post("/android", function (req, res) {
   avatar = "http://192.168.31.52:3000/uploads/avatars/image" + date + ".png";
 });
 
+//发送验证码
+router.post("/code", async (req, res) => {
+  console.log(req.body);
+  const code = createSixNum(); //生成的随机六位数
+  let mail = {
+    // 发件人
+    from: "<qzlu3773@163.com>",
+    // 主题
+    subject: "接受凭证", //邮箱主题
+    // 收件人
+    to: req.body.email, //前台传过来的邮箱
+    // 邮件内容，HTML格式
+    text: "用" + code + "作为你的验证码", //发送验证码
+  };
+  nodemail(mail);
+
+  let validationCode = new Code({
+    code: code,
+    email: req.body.email,
+    timestamp: new Date().getTime(),
+  });
+
+  validationCode = await validationCode.save();
+
+  res.send({
+    code: 0,
+    message: "发送成功",
+  });
+});
+
 //注册
 router.post("/", async (req, res) => {
   validate(req.body);
@@ -107,23 +139,46 @@ router.post("/", async (req, res) => {
   });
   if (userName) return res.status(400).send("用户名已被注册");
 
-  if (!userEmail && !userName) {
-    let user = new User({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      avatar:
-        avatar === "" ? "https://s1.ax1x.com/2020/08/01/a3Pbff.jpg" : avatar,
-    });
-    avatar = "";
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+  const result = await Code.findOneAndDelete(req.body.email);
 
-    const token = user.generateAuthToken();
-    user = await user.save();
-    res
-      .header("x-auth-token", token)
-      .send(_.pick(user, ["_id", "name", "email", "avatar"]));
+  if (result) {
+    const registerTime = new Date().getTime();
+    if (registerTime - result.timestamp >= 5 * 1000 * 60) {
+      return res.send({
+        code: -1,
+        msg: "验证码已过期",
+      });
+    }
+
+    if (req.body.code === result.code) {
+      if (!userEmail && !userName) {
+        let user = new User({
+          name: req.body.name,
+          email: req.body.email,
+          password: req.body.password,
+          avatar: req.body.avatar,
+        });
+        avatar = "";
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+
+        const token = user.generateAuthToken();
+        user = await user.save();
+        res
+          .header("x-auth-token", token)
+          .send(_.pick(user, ["_id", "name", "email", "avatar"]));
+      } else {
+        res.send({
+          code: -1,
+          msg: "发生错误",
+        });
+      }
+    } else {
+      return res.send({
+        code: -1,
+        msg: "验证码错误",
+      });
+    }
   } else {
     res.send({
       code: -1,
