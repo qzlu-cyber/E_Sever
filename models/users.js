@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-11 08:30:55
+ * @LastEditTime: 2022-04-11 19:29:35
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema({
   likedArticles: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: "Articles",
+    default: [],
+  },
+  //用户已点赞评论
+  likedComments: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Comments",
     default: [],
   },
 });

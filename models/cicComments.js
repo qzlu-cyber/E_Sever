@@ -1,13 +1,19 @@
 /*
  * @Author: 刘俊琪
+ * @Date: 2022-04-11 18:09:43
+ * @LastEditTime: 2022-04-11 19:34:16
+ * @Description: 楼中楼评论
+ */
+/*
+ * @Author: 刘俊琪
  * @Date: 2022-04-06 15:01:18
- * @LastEditTime: 2022-04-11 19:34:10
+ * @LastEditTime: 2022-04-06 16:08:32
  * @Description: 动态评论model
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
 
-const commentSchema = new mongoose.Schema({
+const cicCommentSchema = new mongoose.Schema({
   //评论主体
   comment: {
     type: String,
@@ -21,12 +27,11 @@ const commentSchema = new mongoose.Schema({
   },
   //楼中楼评论
   comments: {
-    type: [this.commentSchema],
+    type: [this.cicCommentSchema],
     default: [],
   },
   author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Users",
+    type: Object,
     require: true,
   },
   postTime: {
@@ -35,8 +40,7 @@ const commentSchema = new mongoose.Schema({
   },
   //评论发给谁的
   toUser: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Users",
+    type: Object,
     require: true,
   },
   //哪篇文章下的评论
@@ -47,18 +51,19 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
-const Comment = mongoose.model("Comments", commentSchema);
+const CicComment = mongoose.model("CicComments", cicCommentSchema);
 
-function commentValidate(reqBody) {
+function cicCommentValidate(reqBody) {
   const schema = Joi.object({
     comment: Joi.string().min(3).max(200).required(),
-    toUser: Joi.string().required(),
+    toUser: Joi.string(),
     article: Joi.string().required(),
     commentId: Joi.string(),
+    toUserId: Joi.string(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }
 
-exports.commentSchema = commentSchema;
-exports.Comment = Comment;
-exports.validate = commentValidate;
+exports.cicCommentSchema = cicCommentSchema;
+exports.CicComment = CicComment;
+exports.cicCommentValidate = cicCommentValidate;

@@ -1,9 +1,10 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:36:02
- * @LastEditTime: 2022-04-10 16:16:01
+ * @LastEditTime: 2022-04-11 16:54:05
  * @Description: 用户相关路由文件
  */
+const mongoose = require("mongoose");
 const _ = require("lodash");
 const bcrypt = require("bcryptjs");
 const multiparty = require("multiparty");
@@ -25,13 +26,11 @@ router.get("/me", auth, async (req, res) => {
 
 //根据id查找
 router.get("/:id", async (req, res) => {
-  const id = req.params.id;
-  if (id.match(/^[0-9a-fA-F]{24}$/)) {
-    const user = await User.findById(id).select("_id name email avatar");
-    res.send(user);
-  } else {
-    res.send("用户不存在");
-  }
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return false;
+  const user = await User.findById(req.params.id).select(
+    "_id name email avatar"
+  );
+  res.send(user);
 });
 
 //购买课程
