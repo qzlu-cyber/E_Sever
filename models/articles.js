@@ -1,18 +1,16 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-06 14:32:40
- * @LastEditTime: 2022-04-10 13:53:24
+ * @LastEditTime: 2022-04-11 12:42:13
  * @Description: 动态 model
  */
 const mongoose = require("mongoose");
 const Joi = require("@hapi/joi");
 
-const { commentSchema } = require("./comments");
-
 const articleSchema = new mongoose.Schema({
   title: {
     type: String,
-    minlength: 5,
+    minlength: 2,
     maxlength: 20,
     required: true,
   },
@@ -26,7 +24,8 @@ const articleSchema = new mongoose.Schema({
     default: 0,
   },
   comments: {
-    type: [commentSchema],
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Comments",
     default: [],
   },
   author: {
@@ -44,9 +43,9 @@ const Article = mongoose.model("Articles", articleSchema);
 
 function articleValidate(reqBody) {
   const schema = Joi.object({
-    title: Joi.string().min(5).max(20).required(),
+    title: Joi.string().min(2).max(50).required(),
     body: Joi.string().min(6).required(),
-    author: Joi.string().required(),
+    author: Joi.string(),
     likes: Joi.number(),
   });
   return ({ error, value } = schema.validate(reqBody));

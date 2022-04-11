@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-11 07:41:15
+ * @LastEditTime: 2022-04-11 08:30:55
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
@@ -50,6 +50,12 @@ const userSchema = new mongoose.Schema({
     ref: "Courses",
     default: [],
   },
+  //用户已点赞的文章
+  likedArticles: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Articles",
+    default: [],
+  },
 });
 
 userSchema.methods.generateAuthToken = function () {
@@ -78,6 +84,7 @@ function userValidate(reqBody) {
     userView: Joi.number(),
     courses: Joi.array(),
     code: Joi.string(),
+    likedArticles: Joi.string(),
   });
   return ({ error, value } = schema.validate(reqBody));
 }

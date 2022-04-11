@@ -1,13 +1,14 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-06 15:07:02
- * @LastEditTime: 2022-04-06 16:15:15
+ * @LastEditTime: 2022-04-11 12:28:24
  * @Description: 评论 路由
  */
 const express = require("express");
 const router = express.Router();
 
 const auth = require("../middlewares/auth");
+const { Article } = require("../models/articles");
 const { Comment, validate } = require("../models/comments");
 
 //获取某一篇文章的comment
@@ -25,12 +26,24 @@ router.post("/", auth, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let comment = new Comment({
-    comment: req.body.comment, //评论体
+    comment: req.body.comment.replace(/<[^>]*>|/g, ""), //评论体
     author: req.user._id, //发布评论的用户
     toUser: req.body.toUser, //给谁发的评论
     article: req.body.article, //在哪篇文章下的评论
   });
+
   comment = await comment.save();
+
+  const article = await Article.findById(req.body.article);
+  await Article.findByIdAndUpdate(
+    req.body.article,
+    {
+      comments: article.comments.concat([comment._id]),
+    },
+    {
+      new: true,
+    }
+  );
   res.send(comment);
 });
 
