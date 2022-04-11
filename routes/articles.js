@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-06 14:32:12
- * @LastEditTime: 2022-04-09 17:55:32
+ * @LastEditTime: 2022-04-11 07:16:26
  * @Description: 动态页路由
  */
 const express = require("express");
@@ -23,7 +23,7 @@ router.get("/:id", async (req, res) => {
 });
 
 //发布文章
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   //如果有权限检查body体是否合法
   validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
   let article = new Article({
     title: req.body.title,
     body: req.body.body,
-    author: req.body.author,
+    author: req.user._id,
   });
   article = await article.save();
   res.send(article);
@@ -47,7 +47,7 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 //点赞文章
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const article = await Article.findByIdAndUpdate(
     req.params.id,
     {

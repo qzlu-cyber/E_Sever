@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:07:50
- * @LastEditTime: 2022-04-09 15:35:09
+ * @LastEditTime: 2022-04-11 07:42:15
  * @Description: 课程相关路由文件
  */
 const mongoose = require("mongoose");
@@ -73,9 +73,9 @@ function coursesValidate(reqBody) {
     tags: Joi.string().required(),
     comments: Joi.array(),
     price: Joi.number().min(0).required(),
-    teacher: Joi.string().required(),
+    teacher: Joi.string(),
     cover: Joi.string().required(),
-    teacherName: Joi.string().required(),
+    teacherName: Joi.string(),
     starts: Joi.number(),
   });
   return ({ error, value } = schema.validate(reqBody));

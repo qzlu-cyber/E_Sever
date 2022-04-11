@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-09 15:32:51
+ * @LastEditTime: 2022-04-11 07:18:55
  * @Description: 课程相关路由
  */
 const _ = require("lodash");
@@ -80,7 +80,7 @@ router.patch("/", (req, res) => {
 });
 
 //发布课程
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   // console.log(req.user);
   //如果有权限检查body体是否合法
   validate(req.body);
@@ -104,8 +104,8 @@ router.post("/", async (req, res) => {
       courseDetail: req.body.courseDetail,
       tags: req.body.tags,
       price: req.body.price,
-      teacher: req.body.teacher,
-      teacherName: req.body.teacherName,
+      teacher: req.user._id,
+      teacherName: req.user.name,
       cover: req.body.cover,
     });
     course = await course.save();

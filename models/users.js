@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:38:56
- * @LastEditTime: 2022-04-10 17:34:20
+ * @LastEditTime: 2022-04-11 07:41:15
  * @Description: 用户属性字段
  */
 const mongoose = require("mongoose");
@@ -59,7 +59,6 @@ userSchema.methods.generateAuthToken = function () {
       email: this.email,
       name: this.name,
       userView: this.userView,
-      avatar: this.avatar,
       signature: this.signature,
     },
     config.get("jwtToken")
