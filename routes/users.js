@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:36:02
- * @LastEditTime: 2022-04-11 16:54:05
+ * @LastEditTime: 2022-04-12 15:13:50
  * @Description: 用户相关路由文件
  */
 const mongoose = require("mongoose");
@@ -24,6 +24,25 @@ router.get("/me", auth, async (req, res) => {
   res.send(user);
 });
 
+//查询自己已购买的课程
+router.get("/mycourses", auth, async (req, res) => {
+  const user = await User.findById(req.user._id).select("name email courses");
+  const courses = await Course.find({
+    _id: { $in: user.courses },
+  });
+
+  res.send(courses);
+});
+
+//查找所有老师
+router.get("/teachers", async (req, res) => {
+  const user = await User.find({
+    userView: { $gt: 0 },
+  }).select("-password");
+
+  res.send(user);
+});
+
 //根据id查找
 router.get("/:id", async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) return false;
@@ -35,18 +54,22 @@ router.get("/:id", async (req, res) => {
 
 //购买课程
 router.post("/shopping", auth, async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select("name email courses");
   const course = await Course.findById(req.body.courseId);
   if (!course) return res.status(404).send("抱歉，你要购买的课程不存在");
 
   for (let i = 0; i < user.courses.length; i++) {
-    if (user.courses[i] == req.body.courseId[0])
+    if (user.courses[i] == req.body.courseId)
       return res.status(400).send("您已经购买过该课程，不能重复购买！");
   }
   user.set({
-    courses: user.courses.concat(req.body.courseId),
+    courses: user.courses.concat([req.body.courseId]),
+  });
+  course.set({
+    saleNum: course.saleNum + 1,
   });
   const result = await user.save();
+  await course.save();
   res.send(result);
 });
 

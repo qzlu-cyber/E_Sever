@@ -1,9 +1,10 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-11 07:18:55
+ * @LastEditTime: 2022-04-12 15:13:19
  * @Description: 课程相关路由
  */
+const mongoose = require("mongoose");
 const _ = require("lodash");
 const express = require("express");
 const router = express.Router();
@@ -22,6 +23,15 @@ router.get("/", async (req, res) => {
   res.send(courses);
 });
 
+//获取某一课程的所有评价
+router.get("/judge/:id", async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return false;
+
+  const courses = await Course.findById(req.params.id).select("comments");
+
+  res.send(courses);
+});
+
 //模糊查询特定类别课程，用于分类
 router.post("/searchByTag", async (req, res) => {
   const reg = new RegExp(req.body.tag, "i");
@@ -32,21 +42,21 @@ router.post("/searchByTag", async (req, res) => {
 
 //根据购买人数查询热门课程
 router.get("/searchByHot", async (req, res) => {
-  const courses = await Course.find().sort({ saleNum: -1 }).limit(5);
+  const courses = await Course.find().sort({ saleNum: -1 });
 
   res.send(courses);
 });
 
 //根据课程发布时间查询课程
 router.get("/searchByDate", async (req, res) => {
-  const courses = await Course.find().limit(5).sort({ date: -1 });
+  const courses = await Course.find().sort({ date: -1 });
 
   res.send(courses);
 });
 
 //根据老师查询课程
-router.get("/searchByTeacher", async (req, res) => {
-  const courses = await Course.find({ teacherID: req.body.teacherID }).sort({
+router.get("/searchByTeacher/:id", async (req, res) => {
+  const courses = await Course.find({ teacher: req.params.id }).sort({
     saleNum: 1,
   });
 
@@ -135,6 +145,29 @@ router.put("/editInfo/:id", auth, async (req, res) => {
     const result = await course.save();
     res.send(result);
   }
+});
+
+//评价课程
+router.post("/judge", auth, async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.body.courseId)) return false;
+
+  const course = await Course.findById(req.body.courseId).select(
+    "name comments"
+  );
+
+  const courseComment = {
+    comment: req.body.comment,
+    stars: req.body.stars,
+    userName: req.user.name,
+    avatar: req.body.avatar,
+  };
+
+  course.set({
+    comments: course.comments.concat([courseComment]),
+  });
+  const result = await course.save();
+
+  res.send(result);
 });
 
 module.exports = router;
