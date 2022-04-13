@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 13:28:28
- * @LastEditTime: 2022-04-11 17:21:56
+ * @LastEditTime: 2022-04-13 19:19:32
  * @Description: 入口文件
  */
 const express = require("express");
@@ -9,12 +9,15 @@ const mongoose = require("mongoose");
 const config = require("config");
 const app = express();
 const http = require("http").createServer(app);
+require("./services/socket")(http);
 
 const users = require("./routes/users");
 const courses = require("./routes/courses");
 const auth = require("./routes/auth");
 const articles = require("./routes/articles");
 const comments = require("./routes/comments");
+const chatMessages = require("./routes/chatMessages");
+const socketId = require("./routes/socketId");
 
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ limit: "25mb", extended: true }));
@@ -41,6 +44,8 @@ app.use("/api/courses", courses);
 app.use("/api/auth", auth);
 app.use("/api/articles", articles);
 app.use("/api/comments", comments);
+app.use("/api/chatMessages", chatMessages);
+app.use("/api/socketId", socketId);
 
 const port = process.env.PORT || 3000;
 

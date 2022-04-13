@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-12 15:13:19
+ * @LastEditTime: 2022-04-13 13:47:32
  * @Description: 课程相关路由
  */
 const mongoose = require("mongoose");
