@@ -1,7 +1,7 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-02 15:16:26
- * @LastEditTime: 2022-04-13 13:47:32
+ * @LastEditTime: 2022-04-14 14:40:32
  * @Description: 课程相关路由
  */
 const mongoose = require("mongoose");
@@ -63,14 +63,15 @@ router.get("/searchByTeacher/:id", async (req, res) => {
   res.send(courses);
 });
 
+router.get("/:id");
+
 //展示单个课程（用于显示某一课程详情）
 router.get("/:id", async (req, res) => {
   const course = await Course.findById(req.params.id);
   if (!course) return res.status(404).send("抱歉，你要找的课程不存在");
 
-  const result = await Course.findById(req.params.id).populate(
-    "teacher",
-    "name -_id"
+  const result = await Course.findById(req.params.id).select(
+    "teacher teacherName"
   ); // 附带老师信息将课程所有信息打印出来
 
   res.send(result);

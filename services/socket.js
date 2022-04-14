@@ -1,47 +1,25 @@
 /*
  * @Author: 刘俊琪
  * @Date: 2022-04-13 15:48:36
- * @LastEditTime: 2022-04-13 19:38:52
+ * @LastEditTime: 2022-04-14 14:04:50
  * @Description: 描述
  */
-const { SocketId, validate } = require("../models/socketId");
-
 const { ChatMessage } = require("../models/chatMessages");
+const { User } = require("../models/users");
+
+let users = {};
 
 module.exports = function socket(sever) {
   const io = require("socket.io")(sever);
   io.on("connection", (socket) => {
     console.log("客户端连接成功");
     console.log(socket.id);
+    socket.on("login", (from) => {
+      socket.name = from;
+      users[from] = socket.id;
+      console.log("users", users);
+    });
     socket.on("sendMessage", ({ from, to, content }) => {
-      const deleteOldSocketId = async () => {
-        await SocketId.findOneAndDelete({
-          user: from,
-        });
-      };
-
-      deleteOldSocketId();
-
-      let socketId = new SocketId({
-        user: from,
-        socketId: socket.id,
-      });
-
-      const saveSocketId = async (socketId) => {
-        await socketId.save();
-      };
-
-      saveSocketId(socketId);
-
-      const getToUserSocketId = async () => {
-        const result = await SocketId.find({
-          user: to,
-        });
-        return result.socketId;
-      };
-
-      const toUserSocketId = getToUserSocketId();
-
       const chat_id = [from, to].sort().join("_");
       let message = new ChatMessage({
         from,
@@ -53,8 +31,13 @@ module.exports = function socket(sever) {
         await message.save();
       };
       saveMessage(message);
-
-      // io.sockets.connected[toUserSocketId].emit("message", message);
+      socket.to(users[to]).emit("recieveMessage", content);
+    });
+    socket.on("disconnecting", () => {
+      if (users.hasOwnProperty(socket.name)) {
+        delete users[socket.name];
+        console.log(socket.id + "离开");
+      }
     });
   });
 };
